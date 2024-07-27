@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="../dist/jspsych.js"></script>
+  <script src="../dist/plugin-video-rating-continuous.js"></script>
+  <script src="../dist/plugin-html-button-response.js"></script>
+  <script src="../dist/plugin-preload.js"></script>
+  <link rel="stylesheet" href="../dist/jspsych.css">
+</head>
+<body></body>
+<script>
+
+  var jsPsych = initJsPsych({
+    on_finish: function() {
+      jsPsych.data.displayData();
+    }
+  });
+
+  var preload = {
+    type: jsPsychPreload,
+    auto_preload: true
+  };
+
+  var pre_trial = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: '<div style="max-width:600px;"><p>Some browsers now require that a user interacts with a web page before video or audio content will autoplay. Clicking the button below satisfies that requirement.</p><p>Without this trial, the video will load but not play.</p></div>',
+    choices: ['Continue']
+  };
+
+  var trial_1 = {
+    type: jsPsychVideoRatingContinuous,
+    stimulus: ['video/sample_video.mp4'],
+    prompt: ['Press "1" to move left. Press "2" to move right.'],
+    // width: 1000,
+    // height: 1000,
+    step: 2,
+    min: -100,
+    max: 100,
+    left_key: '1', 
+    right_key: '2',
+    labels: ['100% Guilty', '100% Innocent'],
+    value_suffix: "% Certain",
+  };
+
+  jsPsych.run([preload, pre_trial, trial_1]);
+
+</script>
+</html>

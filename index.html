@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Experiment Title -->
+  <title>Experiment</title>
+
+  <!-- Loading in libraries  -->
+  <script src="jspsych_v8.0.1/dist/jspsych.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-video-rating-continuous.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-html-keyboard-response.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-image-button-response.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-survey.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-preload.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-fullscreen.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-browser-check.js"></script>
+  <link rel="stylesheet" href="jspsych_v8.0.1/dist/jspsych.css">
+  
+  <!-- Loading in text, scales, labels, & functions  -->    
+  <!-- <script src="components/scales/Demographics.js"></script> -->
+  <script src="components/Text.js"></script>
+
+</head>
+
+<!-- Determining general page style parameters -->
+<body style="background-color: rgb(200, 200, 200);">
+<script>
+
+  // Creating a timeline
+  var timeline = [];
+  
+// | - - - - - - - - - - - - - - - - - - - - - - - - - - |
+// | - - - - - - - - EXPERIMENT VARIABLES - - - - - - -  |
+// | - - - - - - - - - - - - - - - - - - - - - - - - - - |   
+
+  // Initiating the experiment, defining where to save the data output
+  var jsPsych = initJsPsych({
+    timeline: timeline,
+    on_finish: function() {
+      jsPsych.data.get().localSave('csv','data/'+ session_date +'.csv');
+    }
+  });
+
+  // Capture today's date
+  var session_date = new Date().toDateString();
+  
+  // Assigning screen dimensions
+  const width = 1250;
+  const height = 700;
+
+  // Preloading stimuli and functions
+  var preload = {
+    type: jsPsychPreload,
+    auto_preload: true,
+    data: {task: 'Preload'},
+  };
+  
+  // Making the browser fullscreen to limit distractions
+  var enter_fullscreen = {
+    type: jsPsychFullscreen,
+    fullscreen_mode: true,
+    data: {task: 'Fullscreen'},
+    on_finish: function(data) {
+    // Getting current time
+    var today = new Date();
+    var curr_time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    data.time = curr_time
+    }
+  };
+
+  // Checking whether the browser they are accessing this with is chrome and not a mobile device and meets our minimum dimension criteria
+  var browser_check = {
+    type: jsPsychBrowserCheck,
+    minimum_width: width,
+    minimum_height: height,
+    inclusion_function: (data) => {
+      return ((data.browser == 'chrome' || data.browser == 'firefox' || data.browser == 'safari' || data.browser == 'edge') && data.mobile === false)
+    },
+    exclusion_message: (data) => {
+      if (data.mobile){
+        return error_Laptop;
+      } else if (data.browser !== 'chrome' && data.browser !== 'firefox' && data.browser !== 'safari' && data.browser !== 'edge'){
+        return error_Browser;
+      }
+    },
+    data: {task: 'Browser_Check'},
+  };
+  
+  // Asking people whether they consent to study participation
+  var consent = {
+    type: jsPsychImageButtonResponse,
+    stimulus: 'components/consent/consent.png',
+    upper_prompt: instr_Consent,
+    choices: labels_Consent,
+    render_on_canvas:false,
+    data: {task: 'Consent'},
+    on_finish: function (data) {
+      // Check the participant's response
+      if (data.response == 1) {
+        jsPsych.endExperiment(instr_NoConsent);
+      }
+    }
+  };
+
+  // Run the continuous rating task
+  var continuous_rating = {
+    type: jsPsychVideoRatingContinuous,
+    stimulus: ['jspsych_v8.0.1/examples/video/sample_video.mp4'],
+    prompt: ['Press "1" to move left. Press "2" to move right.'],
+    width: width,
+    height: height,
+    step: 2,
+    min: -100,
+    max: 100,
+    left_key: '1', 
+    right_key: '2',
+    labels: ['100% Guilty', '100% Innocent'],
+    value_suffix: "% Certain",
+    data: {task: 'rating'},
+  };
+
+  // Instructions for individual difference measures
+  var instr_IndDiffDisplay = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: [instr_IndDiff],
+    choices: [' '],
+    data: {task: 'Instr_IndDiffs'},
+  };
+
+  // Closing the experiment
+  var trial_after_fullscreen = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: instr_ExpEnd,
+    choices: [' '],
+    data: {task: 'Instr_Closure'},
+  }
+
+  // Exiting Full Screen
+  var exit_fullscreen = {
+    type: jsPsychFullscreen,
+    fullscreen_mode: false,
+    delay_after: 0,
+    data: {task: 'Fullscreen'},
+    on_finish: function(data) {
+        // Getting current time
+        var today = new Date();
+        var curr_time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+        data.time = curr_time
+    }
+  }
+
+// | - - - - - - - - - - - - - - - - - - - - - - - - - - |
+// | - - - - - - - - EXPERIMENT TIMELINE - - - - - - - - |
+// | - - - - - - - - - - - - - - - - - - - - - - - - - - |    
+
+  // Preloading our video stimuli
+  timeline.push(preload);
+
+// | - - - - - Quality Assurance Measures - - - - - -|
+
+  // Making the browser fullscreen to limit distractions
+  timeline.push(enter_fullscreen);
+
+  // Checking whether the browser they are accessing this with is chrome and not a mobile device and meets our minimum dimension criteria
+  timeline.push(browser_check);
+
+// | - - - - - Consent - - - - - -|  
+  
+  // Asking people whether they consent to study participation
+  timeline.push(consent);
+
+// | - - - - - Instructions - - - - - -|
+    
+  // Iterating through our sequentially-ordered array of initial instructions
+  for (var i = 0; i < instr_Intro.length; i++) {
+    var instr_IntroDisplay = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: instr_Intro[i],
+      choices: [' '],
+      data: {task: 'Instr_Task'},
+    };
+    timeline.push(instr_IntroDisplay);
+  }
+
+// | - - - - - Tasks - - - - - - |
+
+  timeline.push(continuous_rating);
+
+  // timeline.push(demographics);
+  
+// | - - - - - Exiting - - - - - -|
+
+  // Closing the experiment
+  timeline.push(trial_after_fullscreen);
+  
+  // Exiting Full Screen
+  timeline.push(exit_fullscreen);
+
+// | - - - - - - - - - - - - - - - - - - - - - - - - - - |
+// | - - - - - - - - RUNNING EXPERIMENT  - - - - - - - - |
+// | - - - - - - - - - - - - - - - - - - - - - - - - - - |   
+
+  jsPsych.run(timeline);
+
+</script>
+</body>
+</html>
