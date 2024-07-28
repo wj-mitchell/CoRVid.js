@@ -37,7 +37,7 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
     },
     homepage: "https://www.jspsych.org/latest/plugins/video-rating-continuous",
     peerDependencies: {
-      jspsych: ">=8.0.1"
+      jspsych: ">=7.1.0"
     },
     devDependencies: {
       "@jspsych/config": "^3.0.0",
@@ -82,9 +82,13 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
         type: jsPsych.ParameterType.FLOAT,
         default: null
       },
-      rate: {
+      frame_rate: {
         type: jsPsych.ParameterType.FLOAT,
         default: 1
+      },
+      sample_rate:{
+        type: jsPsych.ParameterType.INT,
+        default: 24
       },
       min: {
         type: jsPsych.ParameterType.INT,
@@ -133,7 +137,7 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
         type: jsPsych.ParameterType.INT
       },
       rt: {
-        type: jsPsych.ParameterType.INT
+        type: jsPsych.ParameterType.FLOAT
       },
       stimulus: {
         type: jsPsych.ParameterType.STRING,
@@ -179,7 +183,6 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
       }
       video_html += ">";
 
-
       var video_preload_blob = this.jsPsych.pluginAPI.getVideoBuffer(trial.stimulus[0]);
       if (!video_preload_blob) {
         for (var i = 0; i < trial.stimulus.length; i++) {
@@ -209,11 +212,6 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
       }
       html += '">';
       html += '<input type="range" class="jspsych-slider" value="' + trial.slider_start + '" min="' + trial.min + '" max="' + trial.max + '" step="' + trial.step + '" id="jspsych-video-rating-continuous-response" style="width:';
-      if (trial.slider_width !== null) {
-        html += trial.slider_width + "px;";
-      } else {
-        html += "auto;";
-      }
       html += '"></input>';
       html += '<div id="jspsych-video-rating-continuous-value" style="text-align: center; font-size: 150%; margin-top: 10px;">' + Math.abs(trial.slider_start) + trial.value_suffix + '</div><div>';
       for (var j = 0; j < trial.labels.length; j++) {
@@ -238,6 +236,7 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
       var video_element = display_element.querySelector(
         "#jspsych-video-rating-continuous-stimulus-video"
       );
+
       if (video_preload_blob) {
         video_element.src = video_preload_blob;
       }
@@ -246,17 +245,12 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
           end_trial();
         }
       };
-      video_element.playbackRate = trial.rate;
+      video_element.playbackRate = trial.frame_rate;
       if (trial.start !== null) {
         video_element.pause();
         video_element.onseeked = () => {
           video_element.style.visibility = "visible";
           video_element.muted = false;
-          if (trial.autoplay) {
-            video_element.play();
-          } else {
-            video_element.pause();
-          }
           video_element.onseeked = null;
         };
         video_element.onplaying = () => {
@@ -264,21 +258,11 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
           video_element.onplaying = null;
         };
         video_element.muted = true;
-        video_element.play();
       }
-      let stopped = false;
-      if (trial.stop !== null) {
-        video_element.addEventListener("timeupdate", (e) => {
-          var currenttime = video_element.currentTime;
-          if (currenttime >= trial.stop) {
-            video_element.pause();
-            if (trial.trial_ends_after_video && !stopped) {
-              stopped = true;
-              end_trial();
-            }
-          }
-        });
-      }
+      
+      if (trial.trial_duration !== null && trial.trial_duration !== undefined) {
+        this.jsPsych.pluginAPI.setTimeout(end_trial, trial.trial_duration);
+      };
 
       var slider_element = display_element.querySelector(
         "#jspsych-video-rating-continuous-response"
@@ -302,44 +286,35 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
       });
 
       var startTime = performance.now();
-      var response = {
-        rt: null,
-        response: null
-      };
+      var response = []; 
 
-      var recorded_values = [];
+      var rt = [];
 
       function sample_value() {
-        recorded_values.push({
-          time: performance.now() - startTime,
-          value: slider_element.value
-          }
-        );  
+        rt.push(parseFloat(((performance.now() - startTime)/1000).toFixed(3))); 
+        response.push(slider_element.value);
       }
 
-      var sampling_interval = setInterval(sample_value, 1000 / 24);
+      var sampling_interval = setInterval(sample_value, 1000 / trial.sample_rate);
 
       const end_trial = () => {
         clearInterval(sampling_interval);
-        display_element.querySelector(
-          "#jspsych-video-rating-continuous-stimulus-video").pause();
-        display_element.querySelector(
-          "#jspsych-video-rating-continuous-stimulus-video"
-        ).onended = () => {
-        };
+        video_element.pause();
+        video_element.onended = null; 
+        
+        // Gather trial data
         var trial_data = {
-          rt: response.rt,
           stimulus: trial.stimulus,
           start: trial.start,
           slider_start: trial.slider_start,
-          response: response.response
+          rt: rt, 
+          response: response, 
+          sample_rate: trial.sample_rate,
         };
+
+        // End the trial and pass the data
         this.jsPsych.finishTrial(trial_data);
       };
-
-      if (trial.trial_duration !== null) {
-        this.jsPsych.pluginAPI.setTimeout(end_trial, trial.trial_duration);
-      }
     }
   }
 
@@ -348,12 +323,3 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
   return VideoRatingContinuousPlugin;
 
 })(jsPsychModule);
-
-
-
-/*
-CURRENT ERROR CODES
-
-None, but video trial runs and doesn't appear. 
-
-*/

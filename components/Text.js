@@ -1,10 +1,10 @@
 // Formatting our labels and instructions
 var style_instr = '<p style="font-size: 36px; width: 1200px; line-height: 40px;">'
-var style_instr_nowidth = '<p style="font-size: 36px; line-height: 40px;">'
-var style_strat_labels = '<font size="+7"><p>'
+var style_buttons = '<p style="font-size: 36px; line-height: 40px;">'
 
 // Consent labels
-var labels_Consent = [style_strat_labels + 'I consent to<br>participate in this study</p></font>', style_strat_labels + 'I do not consent to<br>participate in this study</p></font>']
+var labels_Consent = [style_buttons + 'I consent to<br>participate in this study</p>', 
+    style_buttons + 'I do not consent to<br>participate in this study</p>']
 
 // Error messages
 var error_Laptop = [
@@ -16,7 +16,7 @@ var error_Browser = [
 
 // Miscellaneous text
 var instr_Consent = [
-    style_instr_nowidth + "Before completing any study tasks, please review the following consent document and indicate whether you consent to study participation.</p>"
+    style_instr + "<br><br>Before completing any study tasks, please review the following consent document and indicate whether you consent to study participation.<br><br></p>"
 ]
 var instr_NoConsent = [
     style_instr + 'You did not consent to participate. The session will now finish. Thank you for your time!<br><br><br><a href="https://app.prolific.co/">Click here to return to Prolific and complete the study</a>.</p>'
