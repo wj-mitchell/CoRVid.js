@@ -30,7 +30,7 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
       url: "git+https://github.com/jspsych/jsPsych.git",
       directory: "packages/plugin-video-rating-continuous"
     },
-    author: "William Mitchell",
+    author: "Modified by William Mitchell",
     license: "MIT",
     bugs: {
       url: "https://github.com/jspsych/jsPsych/issues"
@@ -302,7 +302,6 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
         video_element.pause();
         video_element.onended = null; 
         
-        // Gather trial data
         var trial_data = {
           stimulus: trial.stimulus,
           start: trial.start,
@@ -312,7 +311,6 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
           sample_rate: trial.sample_rate,
         };
 
-        // End the trial and pass the data
         this.jsPsych.finishTrial(trial_data);
       };
     }
