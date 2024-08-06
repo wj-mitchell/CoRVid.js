@@ -214,7 +214,7 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
       html += '<input type="range" class="jspsych-slider" value="' + trial.slider_start + '" min="' + trial.min + '" max="' + trial.max + '" step="' + trial.step + '" id="jspsych-video-rating-continuous-response" style="width:';
       html += '"></input>';
       html += '<div id="jspsych-video-rating-continuous-value" style="text-align: center; font-size: 150%; margin-top: 10px;">';
-      if (abs_value) {
+      if (trial.abs_value) {
         html += Math.abs(trial.slider_start) + trial.units + '</div><div>';
       } else {
         html += trial.slider_start + trial.units + '</div><div>';
@@ -274,7 +274,7 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
         "#jspsych-video-rating-continuous-value"
       );
       slider_element.addEventListener('input', () => {
-        if (abs_value) {
+        if (trial.abs_value) {
           value_element.innerHTML = Math.abs(slider_element.value) + trial.units;
         } else { 
           value_element.innerHTML = slider_element.value + trial.units;
@@ -285,14 +285,14 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
       document.addEventListener("keydown", (event) => {
         if (event.key === trial.right_key) {
           slider_element.value = Math.min(trial.max, parseInt(slider_element.value) + trial.step);
-          if (abs_value) {
+          if (trial.abs_value) {
             value_element.innerHTML = Math.abs(slider_element.value) + trial.units;
           } else { 
             value_element.innerHTML = slider_element.value + trial.units;
           }
         } else if (event.key === trial.left_key) {
           slider_element.value = Math.max(trial.min, parseInt(slider_element.value) - trial.step);
-          if (abs_value) {
+          if (trial.abs_value) {
             value_element.innerHTML = Math.abs(slider_element.value) + trial.units;
           } else { 
             value_element.innerHTML = slider_element.value + trial.units;
