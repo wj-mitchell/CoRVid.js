@@ -2,7 +2,7 @@
 Current version: 0.0.1. 
 <!-- [See version history](https://github.com/jspsych/jsPsych/blob/main/packages/plugin-video-rating-continuous/CHANGELOG.md). -->
 
-This plugin plays a video and collects continuous ratings from the subject on a specific metric. Rating changes can be made using keys which can be changed and which will update the values of a scale visualized below the stimulus. The current value of the scale appears below it and is dynamically updated as ratings changed. The labels, steps, units, and minimum and maximum values of the scale can be manually specified. The trial can start and stop at specified times or for the duration of the stimulus. The default sample rate of the scale is 24hz, or 24 times per second, but this can be manually specified as well.
+This plugin plays a video and collects continuous ratings from the subject on a specific metric. Rating changes can be made using keys which can be changed and which will update the values of a scale visualized below the stimulus. The current value of the scale appears below it and is dynamically updated as ratings changed. The labels, steps, units, and minimum and maximum values of the scale can be manually specified. The trial can start and stop at specified times or for the duration of the stimulus. The default sample rate of the scale is 24hz, or 24 times per second, to match the frame rate at which digital video is commonly streamed, but this can be manually specified as well.
 
 Video files can be automatically preloaded by jsPsych using the [`preload` plugin](preload.md). However, if you are using timeline variables or another dynamic method to specify the video stimulus, you will need to [manually preload](../overview/media-preloading.md#manual-preloading) the videos. Also note that video preloading is disabled when the experiment is running as a file (i.e. opened directly in the browser, rather than through a server), in order to prevent CORS errors - see the section on [Running Experiments](../overview/running-experiments.md) for more information.
 
@@ -22,6 +22,7 @@ controls | boolean | false | If true, controls for the video player will be avai
 start | numeric | null | If given a value, the video will start at this time point in seconds.
 stop| numeric | null | If given a value, the video will stop at this time point in seconds.
 rate | numeric | null | The playback rate of the video. 1 is normal, <1 is slower, >1 is faster.
+use_universal_time | boolean | false | If true, rt is not an array of relative times at which the scale was sampled, but the local time in universal time format at which the scale was sampled. This is likely to be a more computationally intensive approach, especially at high sample rates, and may introduce greater variability in the time between sampling (When false, 24hz sample delays occurred approximately 0.040 to 0.042 seconds apart; when true, 24hz sample delays occurred approximately 0.038 to 0.047 seconds apart).
 sample_rate | numeric | 24 | The rate at which the slider value is sampled in hertz, or samples per second.
 min | integer | -100 | Sets the minimum value of the slider.
 max | integer | 100 | Sets the maximum value of the slider.
@@ -41,7 +42,7 @@ In addition to the [default data collected by all plugins](../overview/plugins.m
 Name | Type | Value
 -----|------|------
 response | array | An array of the slider values sampled during playback.
-rt | array | An array of the times at which the slider values were sampled during playback (in seconds).
+rt | array | An array of the times at which the slider values were sampled during playback (in seconds or universal time stamps (HH:MM:SS:MS)).
 stimulus | array | The `stimulus` array. This will be encoded as a JSON string when data is saved using the `.json()` or `.csv()` functions. 
 slider_start | numeric | The starting value of the slider. 
 start | numeric | The start time of the video clip.
