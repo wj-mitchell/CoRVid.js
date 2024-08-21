@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Experiment Title -->
+  <title>Experiment</title>
+
+  <!-- Loading in libraries  -->
+  <script src="jspsych_v8.0.1/dist/jspsych.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-survey-html-form.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-video-rating-continuous.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-html-keyboard-response.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-image-button-response-modified.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-preload.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-fullscreen.js"></script>
+  <script src="jspsych_v8.0.1/dist/plugin-browser-check.js"></script>
+  <link rel="stylesheet" href="jspsych_v8.0.1/dist/jspsych.css">
+  
+  <!-- Loading in text, scales, labels, & functions  -->    
+  <script src="components/Text.js"></script>
+
+</head>
+
+<!-- Determining general page style parameters -->
+<body style="background-color: rgb(200, 200, 200);">
+<script>
+
+/*
+
+This is an example of what a really simple continuous rating experiment might look like in jsPsych. I incorporated a few QA checks (checks browser compatibility and window size), an example of how I've captured consent in the past (I just used a consent from a defunct study), some instructions, and then the actual task. 
+
+Generally with jsPsych, you'll load the plugins, or functions, as we did above. Then you'll define how you actually want to use those functions, and then you need to push them to a timeline in the order that you want them to appear. You can get real crazy with randomization, counterbalancing, etc. as needed, and there's also a lot of integration with pavlovia and prolific which I didn't include in here, but this should at least give you an idea to know if it might work for your purposes.
+
+As of now, the video-rating-continuous plugin only exists in this repo, but I'll probably try to pitch it to the jsPsych folks once it's been tested a little more. So either run this directory as I have or download the dist directory from jsPsych and add this plugin to the collection. 
+
+*/
+
+// Creating a timeline in which to push different components of this experiment
+  var timeline = [];
+  
+// | - - - - - - - - - - - - - - - - - - - - - - - - - - |
+// | - - - - - - - - EXPERIMENT VARIABLES - - - - - - -  |
+// | - - - - - - - - - - - - - - - - - - - - - - - - - - |   
+
+  // Initiating the experiment, defining where to save the data output
+  // NOTE that is will save to your browser's default downloads directory. I am not aware of another way to do this, but this is really only a problem when you run it locally. If you host it on Pavlovia or something like that, it will save to their servers for you to download.
+  var jsPsych = initJsPsych({
+    timeline: timeline,
+    on_finish: function() {
+      jsPsych.data.get().localSave('csv', subject_id + '_' + session_date +'.csv');
+    }
+  });
+
+  // Capture today's date
+  var session_date = new Date().toDateString();
+  
+  // Assigning screen dimensions
+  const width = 1250;
+  const height = 700;
+
+  // Preloading stimuli and functions
+  var preload = {
+    type: jsPsychPreload,
+    auto_preload: true, // This is redundant with the video argument below. Auto - preload will automatically determine the filepaths for all media in the script. You could remove this if you want to or remove the video argument. 
+    data: {task: 'Preload'},
+    video: ['components/video/banana.mp4', 'components/video/girl.mp4', 'components/video/lights.mp4', 'components/video/strawberry.mp4'],
+    override_safe_mode: true
+  };
+
+  // Making the browser fullscreen to limit distractions
+  var enter_fullscreen = {
+    type: jsPsychFullscreen,
+    fullscreen_mode: true,
+    data: {task: 'Fullscreen'},
+    on_finish: function(data) {
+    // Getting current time
+    var today = new Date();
+    var curr_time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    data.time = curr_time
+    }
+  };
+
+  // Checking whether the browser they are accessing this with is chrome and not a mobile device and meets our minimum dimension criteria
+  var browser_check = {
+    type: jsPsychBrowserCheck,
+    minimum_width: width,
+    minimum_height: height,
+    inclusion_function: (data) => {
+      return ((data.browser == 'chrome' || data.browser == 'firefox' || data.browser == 'safari' || data.browser == 'edge') && data.mobile === false)
+    },
+    exclusion_message: (data) => {
+      if (data.mobile){
+        return error_Laptop;
+      } else if (data.browser !== 'chrome' && data.browser !== 'firefox' && data.browser !== 'safari' && data.browser !== 'edge'){
+        return error_Browser;
+      }
+    },
+    data: {task: 'Browser_Check'},
+  };
+
+  // Asking for a subject ID
+  var PID = {
+      type: jsPsychSurveyHtmlForm,
+      preamble: 'Subject ID:',
+      html: '<p><input type="text" id="test-resp-box" name="PID" size="24" /></p>',
+      autofocus: 'test-resp-box',
+      data: {task: 'PID Entry'},
+      on_finish: function(data) {
+        // Attempt to parse the responses from the correct key
+        var responses = data.response;
+        subject_id = responses.PID;
+      }
+    };
+
+  // Asking people whether they consent to study participation
+  var consent = {
+    type: jsPsychImageButtonResponseModified, 
+    stimulus: 'components/consent/consent.png',
+    upper_prompt: instr_Consent,
+    choices: labels_Consent,
+    render_on_canvas:false,
+    data: {task: 'Consent'},
+    on_finish: function (data) {
+      // Check the participant's response
+      if (data.response == 1) {
+        jsPsych.abortExperiment(instr_NoConsent);
+      }
+    }
+  };
+
+
+  // Make an array that contains the different types of trials we want to run during the experiment (e.g., test phase). 
+  var test_stimuli = [
+  { stimulus: ['components/video/strawberry.mp4']},
+  { stimulus: ['components/video/lights.mp4']},
+  { stimulus: ['components/video/girl.mp4']},
+  { stimulus: ['components/video/banana.mp4']},
+];
+
+
+  // Let's create a fixation trial to show between the test trials. This will be shown for a variable amount of time. For choices, set this parameter to "NO_KEYS" so that   // it will not take subjects' responses. Here, we sample fixation duration from an array of values of a size of 1. The return value is an array of length 1, and we add   // [0] to teh edn of the selection to get the value out of the array. Tag fixation trials so they'll be easy to remove later on.
+  var fixation = {
+  type: jsPsychHtmlKeyboardResponse,
+  stimulus: '<div style="font-size:60px;">+</div>',
+  choices: "NO_KEYS",
+  trial_duration: function(){
+    return jsPsych.randomization.sampleWithoutReplacement([250, 500, 750, 1000, 1250, 1500, 1750, 2000], 1)[0];
+  },
+  data: {
+  task: 'fixation'
+  }
+};
+
+
+  // Run the continuous rating task
+  var continuous_rating = {
+    type: jsPsychVideoRatingContinuous,
+    stimulus: jsPsych.timelineVariable('stimulus'),
+    prompt: ['Press "1" to move left.<br>Press "2" to move right.'],
+    width: width,
+    height: height,
+    step: 2,
+    min: -100,
+    max: 100,
+    left_key: '1', 
+    right_key: '2',
+    labels: ['100% A Human', '100% An Animal'],
+    value_suffix: "% Certain",
+    data: {task: 'Rating'},
+  };
+
+  // To link the variables decliared in the test_stimuli array, we need to create a new timeline or "procedure" and set teh timeline_variables property. Randomize the 
+  // order presentation, and make the test longer by setting the repetitions parameter. This will loop the experiment a fixed number of times.
+  var test_procedure = {
+  timeline: [fixation, continuous_rating],
+  timeline_variables: test_stimuli,
+  randomize_order: true,
+};
+
+  // Closing the experiment
+  var trial_after_fullscreen = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: instr_ExpEnd,
+    choices: [' '],
+    data: {task: 'Instr_Closure'},
+  }
+
+  // Exiting Full Screen
+  var exit_fullscreen = {
+    type: jsPsychFullscreen,
+    fullscreen_mode: false,
+    delay_after: 0,
+    data: {task: 'Fullscreen'},
+    on_finish: function(data) {
+        // Getting current time
+        var today = new Date();
+        var curr_time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+        data.time = curr_time
+    }
+  }
+
+// | - - - - - - - - - - - - - - - - - - - - - - - - - - |
+// | - - - - - - - - EXPERIMENT TIMELINE - - - - - - - - |
+// | - - - - - - - - - - - - - - - - - - - - - - - - - - |    
+
+  // Preloading our video stimuli
+  timeline.push(preload);
+
+// | - - - - - Quality Assurance Measures - - - - - -|
+
+  // Making the browser fullscreen to limit distractions
+  timeline.push(enter_fullscreen);
+
+  // Checking whether the browser they are accessing this with is chrome and not a mobile device and meets our minimum dimension criteria
+  timeline.push(browser_check);
+
+// | - - - - - Consent - - - - - -|  
+  
+  // Entering a subject ID
+  timeline.push(PID);
+
+  // Asking people whether they consent to study participation
+  timeline.push(consent);
+
+var instr_Intro = ['Just testing our text. Press space', 'Making sure this works. Press space.']
+
+// | - - - - - Instructions - - - - - -|
+    
+  // Iterating through our sequentially-ordered array of initial instructions
+  for (var i = 0; i < instr_Intro.length; i++) {
+    var instr_IntroDisplay = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: instr_Intro[i],
+      choices: [' '],
+      data: {task: 'Instr_Task'},
+    };
+    timeline.push(instr_IntroDisplay);
+  }
+
+// | - - - - - Tasks - - - - - - |
+
+//  timeline.push(continuous_rating);
+    timeline.push(test_procedure);
+
+// | - - - - - Exiting - - - - - -|
+
+  // Closing the experiment
+  timeline.push(trial_after_fullscreen);
+  
+  // Exiting Full Screen
+  timeline.push(exit_fullscreen);
+
+// | - - - - - - - - - - - - - - - - - - - - - - - - - - |
+// | - - - - - - - - RUNNING EXPERIMENT  - - - - - - - - |
+// | - - - - - - - - - - - - - - - - - - - - - - - - - - |   
+
+  jsPsych.run(timeline);
+
+</script>
+</body>
+</html>
