@@ -90,6 +90,10 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
         type: jsPsych.ParameterType.INT,
         default: 24
       },
+      use_universal_time:{
+        type: jsPsych.ParameterType.BOOL,
+        default: false
+      },
       min: {
         type: jsPsych.ParameterType.INT,
         default: -100
@@ -300,13 +304,19 @@ var jsPsychVideoRatingContinuous = (function (jsPsych) {
         }
       });
 
-      var startTime = performance.now();
+      if (trial.use_universal_time) {
+      } else {
+        var startTime = performance.now();
+      }
       var response = []; 
-
       var rt = [];
 
-      function sample_value() {
-        rt.push(parseFloat(((performance.now() - startTime)/1000).toFixed(3))); 
+      function sample_value(today = new Date()) {
+        if (trial.use_universal_time) {
+          rt.push(today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds() + ":" + today.getMilliseconds());
+        } else {
+          rt.push(parseFloat(((performance.now() - startTime)/1000).toFixed(3)));
+        }
         response.push(slider_element.value);
       }
 
