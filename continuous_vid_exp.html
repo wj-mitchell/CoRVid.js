@@ -153,6 +153,20 @@ As of now, the video-rating-continuous plugin only exists in this repo, but I'll
   }
 };
 
+// Records a timestamp of when something occurred
+function time_stamp(data) {
+    // Getting the current date and time
+    const today = new Date();
+    
+    // Formatting the time as HH:MM:SS
+    const currTime = today.getHours().toString().padStart(2, '0') + ":" + 
+                     today.getMinutes().toString().padStart(2, '0') + ":" + 
+                     today.getSeconds().toString().padStart(2, '0');
+    
+    // Setting the time in the provided object
+    data.time = currTime;
+}
+
 
   // Run the continuous rating task
   var continuous_rating = {
@@ -170,6 +184,9 @@ As of now, the video-rating-continuous plugin only exists in this repo, but I'll
     labels: ['100% A Human', '100% An Animal'],
     value_suffix: "% Certain",
     data: {task: 'Rating'},
+    on_start: function(data) {
+      time_stamp(data)
+    }
   };
 
   // To link the variables decliared in the test_stimuli array, we need to create a new timeline or "procedure" and set teh timeline_variables property. Randomize the 

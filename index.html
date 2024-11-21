@@ -144,6 +144,14 @@ As of now, the video-rating-continuous plugin only exists in this repo, but I'll
     labels: ['100% A Rabbit', '100% Not A Rabbit'],
     value_suffix: "% Certain",
     data: {task: 'Rating'},
+    on_start: function(data) {
+      // Getting current time
+      var today = new Date();
+      curr_time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();      
+    },
+    on_finish: function(data) {
+      data.time = curr_time
+    }
   };
 
   // Closing the experiment
